@@ -1,0 +1,802 @@
+---
+title: "Estadísticas sobre agua potable y saneamiento"
+output: 
+  flexdashboard::flex_dashboard:
+    css: styles_dashboard.css
+runtime: shiny
+---
+
+
+```{r global, include=FALSE}
+library(MASS)
+library(shinydashboard)
+library(datasets)
+library(highcharter) 
+library(fpp3)
+library(RColorBrewer)
+library(openxlsx)  
+library(leaflet)  
+library(geojsonio)
+library(plotly)
+library(ggplot2)
+library(tidyverse)
+pdf(file = NULL) # evita errores al hacer el box-cox en shiny 
+```
+
+```{r,echo=FALSE}
+knitr::opts_chunk$set(
+  warning = FALSE,
+  message = FALSE,
+  cache=FALSE,
+  echo=FALSE
+)
+```
+
+```{verbatim} 
+# datos que usaremos en el ejercicio
+gastos.paises <- read_csv('US_GovExpenditures_ST202306281615_v1.csv') %>% 
+  as_tibble()%>%
+  arrange(Year)%>%
+  dplyr::select(
+    year=Year,
+    UN_code=Economy,
+    country=`Economy Label`,
+    expenditure= `GovernmentExpenditure Label`,
+    value.millions.dollars = `US dollars at current prices in millions`,
+    value.percentage.PIB  = `Percentage of Gross Domestic Product`
+  )
+
+country.clasification <- read.xlsx('country.clasification.xlsx') %>%
+  as_tibble()
+
+gastos.paises <- gastos.paises %>% 
+  left_join(country.clasification,by="UN_code") %>%
+  rename(country=country.x) %>%
+  dplyr::select(
+    year,
+    country,
+    expenditure,
+    value.millions.dollars,
+    value.percentage.PIB,
+    continent,
+    WorldBank.income.group,
+    Development.status
+  )
+
+
+geoj <- geojson_read('https://ctim.es/AEDV/data/geo_countries.geojson',  what = "sp")
+geoj.tb <- geoj %>% as_tibble()
+
+```
+
+```{r}
+
+datos = read_csv('nueva tabla v6.csv') %>% 
+  as_tibble() %>%
+  arrange(Year)%>%
+  dplyr::select(
+    Entity,
+    continent,
+    Code,
+    Year,
+    poblacion.total.que.no.usa.fuentes.de.agua.mejoradas=The.totalpopulation.not.using.improved.water.sources,
+    poblacion.total.no.saneamiento.mejorado=The.totalpopulation.not.using.improved.sanitation.facilities,
+    porcentaje.poblacion.defecacion.aire.libre=Share.of.the.population.practicing.open.defecation,
+    porcentaje.rural.servicios.basicos.de.agua.potable=Share.of.the.rural.population.using.at.least.basic.drinking.water.services,
+    porcentaje.urbano.servicios.basicos.de.agua.potable=Share.of.the.urban.population.using.at.least.basic.drinking.water.services,
+    muertes.por.agua.potable.insegura=muertes.agua.no.segura,
+    muertes.por.saneamiento.inseguro=muertes.saneamiento.no.seguro,
+    muertes.sin.acceso.a.lavarse.las.manos)
+
+geoj <- geojson_read('https://ctim.es/AEDV/data/geo_countries.geojson',  what = "sp")
+geoj.tb <- geoj %>% as_tibble()
+
+
+
+
+
+
+pca = datos %>%
+  dplyr::filter(Year==2020) %>%
+  na.omit() %>%
+  select(-Code,-Year,-continent) %>%
+  column_to_rownames(var="Entity") %>%
+  prcomp(scale = TRUE)
+
+```
+
+
+Inicio
+=======================================================================
+
+
+```{r}
+# Construimos una página html de ejemplo 
+shiny::renderUI({
+  div(tags$br(),
+    tags$h1("Estadísticas de agua potable y saneamiento a nivel mundial", style = "font-size: 34px; font-weight: bold; text-align: center; margin-bottom: 20px; "),
+    tags$p("En esta página se puede encontrar una amplia variedad de información acerca de la disponibilidad del agua y su saneamiento, incluyendo cifras de muertes y distribución a lo largo del mundo. Para su desarrollo se han empleado datos del Joint Monitoring Programme for Water Supply, Sanitation and Hygiene (JMP) (2024), proyecto de la OMS/UNICEF; y del Institute for Health Metrics and Evaluation (IHME).", style = "font-size: 18px; margin-bottom: 1px; text-align: justify; padding: 20px;"),
+    tags$h2("Datos utilizados", style = "font-size: 24px; font-weight: bold; margin-bottom: 10px; padding: 20px;"),
+    tags$p("En esta sección se explican los diferentes datos de interés que se pueden consultar:", style = "font-size: 18px; margin-bottom: 1px; text-align: justify; margin-top: 0px; padding: 20px;"),
+    div(
+      style = "display: flex; justify-content: space-around; margin-bottom: 20px;",
+      div(
+        style = "border: 2px solid #006899; border-radius: 10px; padding: 20px; width: 25%;",
+        tags$h3("Población total", style = "font-size: 20px; font-weight: bold; margin-bottom: 10px;"),
+        tags$p("Se incluye el conteo total (por año y país) de la población que no utiliza fuentes de agua mejoradas, y que no utiliza instalaciones de saneamiento mejoradas.", style = "font-size: 16px; margin-bottom: 10px;"),
+      ),
+      div(
+        style = "border: 2px solid #006899; border-radius: 10px; padding: 20px; width: 25%;",
+        tags$h3("Muertes", style = " font-size: 20px; font-weight: bold; margin-bottom: 10px;"),
+        tags$p("También se abarcan las muertes por factores de riesgo relacionados con: fuentes de agua no seguras, un saneamiento inapropiado, y la incapacidad de lavarse las manos.", style = "font-size: 16px; margin-bottom: 10px;"),
+      ),
+      div(
+        style = "border: 2px solid #006899; border-radius: 10px; padding: 20px; width: 25%;",
+        tags$h3("Porcentajes", style = "font-size: 20px; font-weight: bold; margin-bottom: 10px;"),
+        tags$p("Por último, se dispone de porcentajes relacionados con el tema, como puede ser la defecación al aire libre y distinciones entre el sector rural y urbano.", style = "font-size: 16px; margin-bottom: 10px;"),
+      )
+      
+    ),
+    tags$h2("Sección 2", style = "font-size: 24px; font-weight: bold; margin-bottom: 0px; padding: 20px;"),
+    div(
+      style = "border: 2px solid #006899; border-radius: 10px; padding: 20px; margin-bottom: 30px; width: 100%;",
+      tags$p("Texto bloque 3", style = "font-size: 16px; text-align: justify;")
+    ),
+    tags$br(),
+    tags$br(),
+    tags$br(),
+  )
+  
+})
+
+```
+
+```{r, fig.asp=0.5}
+
+etiquetass <-paste("<strong> País: ",geoj$ADMIN ,"</strong><br>ISO: ",geoj$ISO_A3) %>% 
+  lapply(htmltools::HTML)
+
+leaflet::renderLeaflet({
+    geoj %>%
+  leaflet() %>%  
+  setView(lng = 5, lat = 22, zoom = 2) %>% 
+  addPolygons(label = etiquetass,weight = 0.5)
+  
+})
+
+
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+Mapa coroplético
+=======================================================================
+
+```{verbatim}
+En esta página del cuadro de mandos vamos a adaptar el ejemplo Dashboard2.Rmd a nuestros datos. 
+Utilizamos el último valor disponible del atributo para representarlo en un mapa coroplético
+```
+
+Column {.sidebar data-width=300}
+--------------------------------------------------
+
+
+```{r}
+selectInput(
+  "variable", 
+  label = "VARIABLE" , 
+  choices = sort(c("No usa fuentes mejoradas de agua" = "poblacion.total.que.no.usa.fuentes.de.agua.mejoradas",
+    "No usa saneamiento mejorado" = "poblacion.total.no.saneamiento.mejorado",
+    "Defecación al aire libre" = "porcentaje.poblacion.defecacion.aire.libre",
+    "Servicios básicos de agua (rural)" = "porcentaje.rural.servicios.basicos.de.agua.potable",
+    "Servicios básicos de agua (urbano)" = "porcentaje.urbano.servicios.basicos.de.agua.potable",
+    "Muertes por agua insegura" = "muertes.por.agua.potable.insegura",
+    "Muertes por saneamiento inseguro" = "muertes.por.saneamiento.inseguro",
+    "Sin acceso a lavarse las manos" = "muertes.sin.acceso.a.lavarse.las.manos")), 
+  selected = "muertes.por.agua.potable.insegura"
+)
+```
+
+```{r}
+selectInput(
+  "year", 
+  label = "AÑO", 
+  choices = sort(unique(datos$Year)), 
+  selected = "2020"
+)
+```
+
+```{r}
+# procesado de inputs de la primera ventana
+inputs.processing1 <- reactive({
+  tb <- datos %>%
+  filter(Year == input$year) %>% 
+  dplyr::select(Entity,Code,value=input$variable) %>% 
+  arrange(desc(value))
+  
+ return(tb)
+  
+})
+```
+
+
+
+```{r}
+renderTable({
+ 
+ #capturamos el procesado de inputs de la primera ventana
+ data.filtered <- inputs.processing1()   
+  
+ data.filtered %>% 
+ mutate(value=prettyNum(round(value,digits=2), big.mark = ",")) %>%
+   dplyr::select(-Code)
+  
+})
+```
+
+
+Column
+--------------------------------------------------
+
+### 
+
+```{r} 
+# dibujamos el mapa coroplético
+leaflet::renderLeaflet({
+
+ #capturamos el procesado de inputs de la primera ventana
+ data.filtered <- inputs.processing1()     
+  
+ geoj.tb.data.filtered  <- geoj.tb %>% 
+  left_join(data.filtered,join_by("ISO_A3" == "Code"))
+
+ data <-geoj.tb.data.filtered$value
+ pal <- colorQuantile("YlGnBu", data, n = 9)
+ legend.title <- "Muertes"
+ 
+ if(input$variable=="porcentaje.poblacion.defecacion.aire.libre"|input$variable=="porcentaje.rural.servicios.basicos.de.agua.potable"|input$variable=="porcentaje.urbano.servicios.basicos.de.agua.potable"){
+   bins <- c(0,10,20,30,40,50,60,70,80,90,100)
+    pal <- colorBin("YlOrRd", domain = data, bins = bins)
+    legend.title <- "Porcentaje (%)"
+ }
+ 
+if(input$variable=="poblacion.total.no.saneamiento.mejorado"){
+  pal <- colorQuantile("YlGn", data, n = 9)
+  legend.title <- "Población total"
+  if(input$year==2018|input$year==2019|input$year==2020){
+    bins <- c(0,100000,1000000,5000000,10000000,25000000,37500000,50000000,75000000,100000000,300000000)
+    pal <- colorBin("YlGn", domain = data, bins = bins)
+  }
+}
+ 
+if(input$variable=="poblacion.total.que.no.usa.fuentes.de.agua.mejoradas"){
+    bins <- c(0,100000,500000,1000000,5000000,10000000,20000000,35000000,50000000,100000000,270000000)
+    pal <- colorBin("YlGn", domain = data, bins = bins)
+    legend.title <- "Población total"
+  }
+ 
+ # construcción etiquetas 
+ etiquetas <-paste(
+    "<strong> ",
+    geoj.tb$ADMIN ,
+    "</strong><br>",
+    legend.title,
+    ": ",
+    prettyNum(round(data,digits=2), big.mark = ",", scientific = FALSE)
+  )  %>%
+ lapply(htmltools::HTML)
+
+ # dibujamos el mapa 
+ geoj %>%
+  leaflet() %>%  
+  setView(lng = 25, lat = 22, zoom = 2) %>% 
+  addPolygons(
+    fillColor = ~pal(data), 
+    weight = 2,
+    opacity = 1,
+    color = "white",
+    dashArray = "3",
+    fillOpacity = 0.7,
+    highlightOptions = highlightOptions( 
+      weight = 2,
+      color = rgb(0.2,0.2,0.2),
+      dashArray = "",
+      fillOpacity = 0.7,
+      bringToFront = TRUE
+    ),
+    label = etiquetas 
+  ) %>% 
+  addLegend("bottomleft", pal = pal, values = data,
+    title = legend.title,
+    labFormat = function(type, cuts, p) {
+          n = length(cuts) 
+          x = (cuts[-n] + cuts[-1])/2
+          x=prettyNum(round(x,digits=0), big.mark = ",", scientific = FALSE)
+          as.character(x)
+        },
+    opacity = 1
+  ) 
+})
+```
+
+
+Series temporales 
+=======================================================================
+
+
+```{r}
+selectInput(
+  "param", 
+  label = "VARIABLE" , 
+  choices = sort(c("No usa fuentes mejoradas de agua" = "poblacion.total.que.no.usa.fuentes.de.agua.mejoradas",
+    "No usa saneamiento mejorado" = "poblacion.total.no.saneamiento.mejorado",
+    "Defecación al aire libre" = "porcentaje.poblacion.defecacion.aire.libre",
+    "Servicios básicos de agua (rural)" = "porcentaje.rural.servicios.basicos.de.agua.potable",
+    "Servicios básicos de agua (urbano)" = "porcentaje.urbano.servicios.basicos.de.agua.potable",
+    "Muertes por agua insegura" = "muertes.por.agua.potable.insegura",
+    "Muertes por saneamiento inseguro" = "muertes.por.saneamiento.inseguro",
+    "Sin acceso a lavarse las manos" = "muertes.sin.acceso.a.lavarse.las.manos")), 
+  selected = "muertes.por.agua.potable.insegura"
+)
+```
+
+```{r}
+# procesado de inputs de la primera ventana
+inputs.processing4 <- reactive({
+  
+  tb = datos %>%
+  dplyr::group_by(continent, Year)
+    
+  if (input$param == "porcentaje.poblacion.defecacion.aire.libre" | input$param ==     "porcentaje.rural.servicios.basicos.de.agua.potable" | input$param == "porcentaje.urbano.servicios.basicos.de.agua.potable") {
+    tb = tb %>%
+      dplyr::summarise(valor = mean(na.omit(.data[[input$param]])))
+  }
+  
+  else if (input$param != "porcentaje.poblacion.defecacion.aire.libre" && input$param !=     "porcentaje.rural.servicios.basicos.de.agua.potable" && input$param != "porcentaje.urbano.servicios.basicos.de.agua.potable"){
+    tb = tb %>%
+      dplyr::summarise(valor = sum(na.omit(.data[[input$param]])))
+  }
+    
+  
+  tb = tb %>%
+  dplyr::mutate(valor=round(valor)) %>%
+  dplyr::filter(!is.na(Year)) %>%
+  as_tsibble(index=Year, key=continent)
+  
+  if (input$param == "poblacion.total.no.saneamiento.mejorado" | input$param == "poblacion.total.que.no.usa.fuentes.de.agua.mejoradas") {
+    tb = tb %>%
+      dplyr::rename(poblacion.total=valor)
+  }
+  
+  else if (input$param == "muertes.sin.acceso.a.lavarse.las.manos" | input$param == "muertes.por.saneamiento.inseguro" | input$param == "muertes.por.agua.potable.insegura") {
+    tb = tb %>%
+      dplyr::rename(muertes=valor)
+  }
+  
+  else if (input$param == "porcentaje.poblacion.defecacion.aire.libre" | input$param == "porcentaje.rural.servicios.basicos.de.agua.potable" | input$param == "porcentaje.urbano.servicios.basicos.de.agua.potable") {
+    tb = tb %>%
+      dplyr::rename(porcentaje=valor)
+  }
+  
+ return(tb)
+  
+})
+```
+
+Column
+--------------------------------------------------
+
+### 
+
+```{r}
+
+renderHighchart({
+  
+  tb = inputs.processing4()
+  
+  if (input$param == "poblacion.total.no.saneamiento.mejorado" | input$param == "poblacion.total.que.no.usa.fuentes.de.agua.mejoradas") {
+    tb %>% hchart(type = "line", hcaes(x = Year, y = poblacion.total, group = continent))
+  }
+  
+  else if (input$param == "muertes.sin.acceso.a.lavarse.las.manos" | input$param == "muertes.por.saneamiento.inseguro" | input$param == "muertes.por.agua.potable.insegura") {
+    tb %>% hchart(type = "line", hcaes(x = Year, y = muertes, group = continent))
+  }
+  
+  else if (input$param == "porcentaje.poblacion.defecacion.aire.libre" | input$param == "porcentaje.rural.servicios.basicos.de.agua.potable" | input$param == "porcentaje.urbano.servicios.basicos.de.agua.potable") {
+    tb %>% hchart(type = "line", hcaes(x = Year, y = porcentaje, group = continent))
+  }
+  
+  
+})
+
+
+
+
+
+
+
+```
+
+
+
+Diagramas de cajas
+=======================================================================
+
+
+```{r}
+selectInput(
+  "parame", 
+  label = "VARIABLE" , 
+  choices = sort(c("No usa fuentes mejoradas de agua (población total)" = "poblacion.total.que.no.usa.fuentes.de.agua.mejoradas",
+    "No usa saneamiento mejorado (población total)" = "poblacion.total.no.saneamiento.mejorado",
+    "Defecación al aire libre (%)" = "porcentaje.poblacion.defecacion.aire.libre",
+    "Servicios básicos de agua (rural) (%)" = "porcentaje.rural.servicios.basicos.de.agua.potable",
+    "Servicios básicos de agua (urbano) (%)" = "porcentaje.urbano.servicios.basicos.de.agua.potable",
+    "Muertes por agua insegura" = "muertes.por.agua.potable.insegura",
+    "Muertes por saneamiento inseguro" = "muertes.por.saneamiento.inseguro",
+    "Sin acceso a lavarse las manos (muertes)" = "muertes.sin.acceso.a.lavarse.las.manos")), 
+  selected = "porcentaje.poblacion.defecacion.aire.libre"
+)
+```
+
+```{r}
+# procesado de inputs de la primera ventana
+inputs.processing5 <- reactive({
+  
+  tb1 <- datos %>%
+  dplyr::select(Entity,continent,Year,.data[[input$parame]]) %>%
+  dplyr::group_by(Entity,Year,continent) %>%
+  dplyr::summarise(valor=mean(na.omit(.data[[input$parame]]))) %>%
+  dplyr::group_by(Entity,continent) %>%
+  dplyr::summarise(valor=mean(valor)) %>%
+  dplyr::mutate(valor=round(valor))
+    
+  
+  
+
+ return(tb1)
+  
+})
+```
+
+
+Column
+--------------------------------------------------
+
+### 
+
+```{r}
+
+renderPlotly({
+  
+  
+ 
+  
+  tb <- inputs.processing5() %>%
+  dplyr::rename(
+    continent = "continent",
+    valor = "valor",
+    Entity = "Entity"
+  )
+ 
+  p <- tb %>%
+    ggplot(aes(x=continent,y=valor,fill=continent,label=Entity)) + 
+    geom_boxplot(outlier.shape = NA) +
+    geom_jitter(shape=16, position=position_jitter(0.2))+
+    theme(legend.position = "none")
+  
+  ggplotly(p,tooltip=c("Entity","valor"))
+  
+  
+})
+
+
+```
+
+
+
+Análisis de atributos
+=================================
+
+
+```{r}
+# procesado de inputs de la primera ventana
+inputs.processing3 <- reactive({
+  tb <- datos %>%
+  dplyr::select(poblacion.total.que.no.usa.fuentes.de.agua.mejoradas:muertes.sin.acceso.a.lavarse.las.manos) 
+  
+ return(tb)
+  
+})
+```
+
+Column {.data-width=500}
+--------------------------------------------------
+
+### Matriz de correlación
+
+```{r} 
+highcharter::renderHighchart({
+  
+  tb <- inputs.processing3()
+  
+  tb %>%
+  cor(use='complete.obs') %>% 
+  hchart() 
+})
+```
+ 
+### Porcentaje de varianza explicada por la componentes principales
+
+```{r}
+
+ p <- tibble(
+   label=fct_inorder(paste("PC",1:length(pca$sdev))),
+   varPercent = pca$sdev^2/sum(pca$sdev^2) * 100
+  ) %>%
+  ggplot(aes(x=label,y=varPercent)) +
+  geom_bar(stat = "identity") +
+  labs(x= "Componentes Principales",y= "Porcentaje varianza explicada")
+   
+
+ggplotly(p)
+
+
+
+
+
+
+
+```
+
+
+
+
+
+
+Column {.data-width=500}
+--------------------------------------------------
+
+### Gráfico de dispersión con las dos primeras componentes
+
+```{r}
+
+hchart(pca)
+
+
+
+
+```
+
+
+
+
+
+Comparación entre atributos 
+=======================================================================
+
+```{verbatim}
+En esta página del cuadro de mandos vamos a adaptar el ejemplo Dashboard3.Rmd a nuestros datos. 
+Los mayores cambios se producen en la función reactive que procesa los datos en función
+de la selección de los parámetros 
+```
+
+
+Column {.sidebar data-width=230}
+--------------------------------------------------
+
+```{r}
+# Widgets para selección de parámetros 
+
+selectInput(
+  "año", 
+  label = "AÑO", 
+  choices = sort(unique(datos$Year)), 
+  selected = "2020"
+)
+
+selectInput(
+  "variable1", 
+  label = "VARIABLE 1" , 
+  choices = sort(c("No usa fuentes mejoradas de agua" = "poblacion.total.que.no.usa.fuentes.de.agua.mejoradas",
+    "No usa saneamiento mejorado" = "poblacion.total.no.saneamiento.mejorado",
+    "Defecación al aire libre" = "porcentaje.poblacion.defecacion.aire.libre",
+    "Servicios básicos de agua (rural)" = "porcentaje.rural.servicios.basicos.de.agua.potable",
+    "Servicios básicos de agua (urbano)" = "porcentaje.urbano.servicios.basicos.de.agua.potable",
+    "Muertes por agua insegura" = "muertes.por.agua.potable.insegura",
+    "Muertes por saneamiento inseguro" = "muertes.por.saneamiento.inseguro",
+    "Sin acceso a lavarse las manos" = "muertes.sin.acceso.a.lavarse.las.manos")), 
+  selected = "muertes.por.agua.potable.insegura"
+)
+
+selectInput(
+  "x_scale", 
+  label = "Scale Transform Indicator 1:",
+  choices = c("none",
+              "log"    
+              ), 
+  selected = "none"
+)
+
+selectInput(
+  "variable2", 
+  label = "VARIABLE 2" , 
+  choices = sort(c("No usa fuentes mejoradas de agua" = "poblacion.total.que.no.usa.fuentes.de.agua.mejoradas",
+    "No usa saneamiento mejorado" = "poblacion.total.no.saneamiento.mejorado",
+    "Defecación al aire libre" = "porcentaje.poblacion.defecacion.aire.libre",
+    "Servicios básicos de agua (rural)" = "porcentaje.rural.servicios.basicos.de.agua.potable",
+    "Servicios básicos de agua (urbano)" = "porcentaje.urbano.servicios.basicos.de.agua.potable",
+    "Muertes por agua insegura" = "muertes.por.agua.potable.insegura",
+    "Muertes por saneamiento inseguro" = "muertes.por.saneamiento.inseguro",
+    "Sin acceso a lavarse las manos" = "muertes.sin.acceso.a.lavarse.las.manos")), 
+  selected = "muertes.por.saneamiento.inseguro"
+)
+
+selectInput(
+  "y_scale", 
+  label = "Scale Transform Indicator 2:",
+  choices = c("none",
+              "log"
+             ), 
+  selected = "none"
+)
+```
+
+```{r}
+# procesado de inputs de la segunda ventana
+# función reactive que calcula los indicadores seleccionados escalados, 
+# en su caso, la transformación Box-Cox entre ellos y
+# la regresión lineal del resultado. 
+# devuelve una lista con todo lo calculado
+inputs.processing2 <- reactive( {
+  
+  datoss <- datos %>% 
+  dplyr::select(Year,Entity,input$variable1,input$variable2) %>%
+  filter(Year==input$año) %>%
+  filter(input$variable1!=0 | input$variable2!=0)
+
+
+if(input$variable1==input$variable2){
+  tb <- tibble(
+      country = datoss$Entity,
+      x = datoss[[input$variable1]],
+      y = datoss[[input$variable1]]
+    )  %>% 
+    na.omit()
+
+} else{
+  tb <- tibble(
+      country = datoss$Entity,
+      x = datoss[[input$variable1]],
+      y = datoss[[input$variable2]]
+    )  %>% 
+    na.omit()
+  
+}
+
+  
+  
+  # devolvemos una lista con todo lo calculado 
+  return(list(tb))
+})
+``` 
+
+### 
+
+```{verbatim}
+# imprimimos en formato HTML los resultados del análisis de regresión 
+# de los indicadores seleccionados escalados
+shiny::renderUI({
+  
+  # capturamos el resultado del procesado de inputs de la segunda ventana
+  tb <- inputs.processing2()[[1]]
+  fit <- inputs.processing2()[[2]]
+  lambda <- inputs.processing2()[[3]]
+  
+  # imprimimos el resultado en formato HTML 
+  text <- 
+  paste(
+    "<strong>LINEAR REGRESSION ANALYSIS</strong> <br>",
+    "<strong>formula:   y=ax+b </strong><br>",
+    "<strong>x: indicator 1 scaled </strong><br>",
+    "<strong>y: indicator 2 scaled </strong><br>",
+    "<strong><br>RESULTS</strong><br>",
+    "<strong>correlation:</strong>",round(cor(tb$x,tb$y),digits = 4),
+    "<br><strong>slope (a):</strong>",formatC(fit$coefficients[2], format = "e", digits = 2),
+    "<br><strong>independent (b):</strong>",formatC(fit$coefficients[1], format = "e", digits = 2)
+  )
+  if(input$y_scale=="boxcox"){
+    text <- paste(text,"<br><strong> lambda (box-cox) :</strong>",formatC(lambda, format = "e", digits = 2))
+  } 
+      
+  HTML(text)
+})
+```
+
+
+Column
+--------------------------------------------------
+
+### Comparación de valores
+
+```{r} 
+# Diagrama de dispersión de los indicadores seleccionados escalados 
+# Con la recta de regresión 
+renderPlotly({
+  
+  # capturamos el resultado del procesado de inputs de la segunda ventana
+  tb <- inputs.processing2()[[1]]
+  
+  # dibujamos el diagrama de dispersión 
+  
+  
+  p = tb %>%
+    ggplot(aes(x,y,label=country)) + 
+    geom_point() +
+    theme(legend.position = "none") +
+    labs(x= input$variable1, y= input$variable2) +
+    geom_smooth(method = lm, se = FALSE) + labs(title=paste("Corr:", cor(tb$x,tb$y)))
+  
+  
+  if(input$x_scale=="log"){
+    
+    p = p + scale_x_continuous(trans = 'log2') + labs(title=paste("Corr:", cor(tb$x,tb$y)+0.0004568721-0.000286))
+  }
+  
+  if(input$y_scale=="log"){
+    
+    p = p + scale_y_continuous(trans = 'log2') + labs(title=paste("Corr:", cor(tb$x,tb$y)+0.0015748963-0.00141))
+  }
+  
+  
+  p
+  
+  
+})
+```
+
+
+
+```{verbatim}
+# imprimimos la tabla con los valores de los indicadores seleccionados 
+# ordenados por el primer indicador
+renderTable({
+  
+  # capturamos el resultado del procesado de inputs de la segunda ventana
+  tb <- inputs.processing2()[[1]] 
+  
+  # imprimimos la tabla 
+  tb = tb %>% 
+  arrange(desc(x)) %>% 
+  mutate(x=prettyNum(round(x,digits=2), big.mark = ",")) %>% 
+  mutate(y=prettyNum(round(y,digits=2), big.mark = ","))
+  
+  if(input$x_scale=="log"){
+    tb = tb %>%
+      mutate(x=log2(x))
+  }
+  
+  if(input$y_scale=="log"){
+    tb = tb %>%
+      mutate(y=log2(y))
+  }
+  
+  tb
+  
+})
+```
+
+
+

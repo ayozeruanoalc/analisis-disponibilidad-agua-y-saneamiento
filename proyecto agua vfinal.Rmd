@@ -1,0 +1,1032 @@
+---
+title: "Análisis de disponibilidad de agua y saneamiento a nivel mundial"
+author: "Ayoze Ruano Alcántara"
+date: "2024-10-06\n"
+output:
+  html_document:
+    css: styles.css    
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message =FALSE, warning = FALSE)
+
+
+
+if (!require(wordcloud)) install.packages('wordcloud') 
+library(wordcloud)
+if (!require(RColorBrewer)) install.packages('RColorBrewer') 
+library(RColorBrewer)
+if (!require(GGally)) install.packages('GGally') 
+library(GGally)
+if (!require(openxlsx)) install.packages('openxlsx') 
+library(openxlsx)
+if (!require(pxR)) install.packages('pxR') 
+library(pxR)
+if (!require(patchwork)) install.packages('patchwork') 
+library(patchwork)
+if (!require(ggplot2)) install.packages('ggplot2') 
+library(ggplot2)
+if (!require(tidyverse)) install.packages('tidyverse') 
+library(tidyverse)
+
+if (!require(urca)) install.packages('urca') 
+library(urca)
+if (!require(GGally)) install.packages('GGally') 
+library(GGally)
+if (!require(pxR)) install.packages('pxR') 
+library(pxR)
+if (!require(fpp3)) install.packages('fpp3') 
+library(fpp3)
+if (!require(tidyverse)) install.packages('tidyverse') 
+library(tidyverse)
+
+if (!require(highcharter)) install.packages('highcharter') 
+library(highcharter) 
+if (!require(fpp3)) install.packages('fpp3') 
+library(fpp3)
+if (!require(RColorBrewer)) install.packages('RColorBrewer') 
+library(RColorBrewer)
+if (!require(openxlsx)) install.packages('openxlsx') 
+library(openxlsx) 
+if (!require(leaflet)) install.packages('leaflet') 
+library(leaflet)  
+if (!require(geojsonio)) install.packages('geojsonio') 
+library(geojsonio) 
+if (!require(plotly)) install.packages('plotly') 
+library(plotly)
+if (!require(ggplot2)) install.packages('ggplot2') 
+library(ggplot2)
+if (!require(tidyverse)) install.packages('tidyverse') 
+library(tidyverse)
+
+```
+
+[Enlace al cuadro de mandos](http://10.22.143.222:3838/sample-apps/a2553/proyecto.agua.dashboard.Rmd)
+
+
+![](satellite-map-of-the-world_wm00875.jpg)
+<hr>
+
+### Estado actual y objetivos
+
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;El agua es uno de los recursos naturales más cruciales para la supervivencia humana y el bienestar de todos los seres vivos. Sin embargo, a pesar de su abundancia en la superficie terrestre, su distribución es desigual y su acceso no está garantizado en muchas regiones del mundo. En este sentido, la calidad del agua y su disponibilidad para los seres humanos son temas de gran relevancia, especialmente en un contexto global marcado por el cambio climático y la contaminación ambiental.
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;El panorama global en relación con el agua potable y el saneamiento evidencia desafíos persistentes que afectan a una proporción significativa de la población mundial. A continuación, se presenta una descripción detallada basada en datos recientes:
+
+<strong>Acceso a Agua Potable:</strong>
+
+* 2.200 millones de personas, es decir, casi un tercio de la población mundial, carecen de acceso a servicios de agua potable gestionados de manera segura.
+* En zonas rurales, el problema es más agudo: 4 de cada 5 personas sin acceso a agua potable residen en estas áreas. Esto subraya las disparidades geográficas, donde los recursos y la infraestructura son más limitados.
+* Las regiones más afectadas incluyen áreas de África subsahariana y pequeñas islas en desarrollo, donde el cambio climático está agravando la disponibilidad y calidad del agua.
+
+<strong>Saneamiento y Salud Pública:</strong>
+
+* Más de 3.500 millones de personas, es decir, el 45% de la población mundial, carecen de acceso a instalaciones de saneamiento gestionadas de manera segura.
+* La falta de saneamiento adecuado provoca la contaminación de las fuentes de agua, contribuyendo a la proliferación de enfermedades como el cólera, la diarrea y la fiebre tifoidea, que afectan especialmente a niños menores de cinco años.
+* Solo un cuarto de los países está en camino de alcanzar sus objetivos nacionales relacionados con el saneamiento, evidenciando un retraso significativo en los compromisos establecidos bajo el ODS 6.
+
+<strong>Impacto del Cambio Climático</strong>
+
+* Los fenómenos climáticos extremos, como sequías prolongadas e inundaciones devastadoras, están empeorando la escasez de agua y la calidad de los servicios existentes. Estas condiciones afectan de manera desproporcionada a los países menos desarrollados.
+* Más del 70% de los países aún no integran estrategias de resiliencia climática en sus políticas de agua y saneamiento, aumentando su vulnerabilidad frente al cambio climático.
+
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Este estudio tiene como objetivo principal realizar un análisis exhaustivo del acceso al agua potable y el saneamiento. Para ello, se examinan varios indicadores, tales como la accesibilidad a fuentes de agua seguras, el porcentaje de población que utiliza instalaciones sanitarias adecuadas, y las tasas de enfermedades vinculadas al agua contaminada. A través de esta investigación, se busca identificar las áreas más afectadas, tomando en cuenta las variaciones regionales y la disparidad en el acceso.
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Uno de los objetivos clave de este estudio es generar conciencia sobre la escasez de agua en diversas partes del mundo y sensibilizar a las poblaciones con acceso suficiente sobre la importancia de conservar este recurso. La conservación del agua no solo implica su uso eficiente, sino también la preservación de los ecosistemas acuáticos, que son esenciales para el ciclo del agua y para mantener el equilibrio ambiental.
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Este estudio fue motivado por el hecho de que existe una fuerte relación entre el tema elegido y el impacto directo en la salud, la sostenibilidad ambiental y la equidad con las personas.
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;El agua no solo es esencial para la vida, sino que también es un pilar fundamental para el desarrollo económico y social. De ahí la urgencia de implementar políticas públicas y prácticas que aseguren su disponibilidad y calidad para todas las personas, sin dejar de lado el principio de justicia social.
+
+
+<hr>
+
+
+
+### Aportaciones
+
+
+
+<br>A continuación se mencionan varias contribuciones que aporta el estudio a la comunidad investigadora y la sociedad:
+
+* <strong>Reducción de desigualdades</strong>: Este trabajo resalta las disparidades en el acceso a agua potable y saneamiento, especialmente en regiones rurales y países de bajos ingresos como África Subsahariana y Asia. Propone estrategias para mitigar estas desigualdades, alineándose con el ODS 10 (Reducción de las desigualdades).
+
+* <strong>Salud pública y bienestar</strong>: Contribuye a mejorar la salud al identificar prácticas inseguras como la defecación al aire libre, vinculadas a enfermedades graves. Esto apoya el ODS 3 (Salud y bienestar).
+
+* <strong>Metodologías analíticas innovadoras</strong>: Se incluye un cuadro de mando interactivo con mapas coropléticos, series temporales y análisis estadísticos como diagramas de dispersión y matrices de correlación, que permiten visualizar datos de manera clara y tomar decisiones basadas en evidencia.
+
+* <strong>Generación de conocimiento</strong>: Proporciona análisis exhaustivos de indicadores clave, como la accesibilidad a servicios básicos de agua y saneamiento y tasas de mortalidad relacionadas con agua contaminada, fomentando la investigación en el área.
+
+* <strong>Concienciación sobre el problema</strong>: Se invita a impulsar la creatividad a la hora de investigar posibles soluciones que equilibren la gravedad de la situación.
+
+Además, el proyecto se alinea directamente con los siguientes ODS sugeridos por la ULPGC:
+
+* <strong>ODS 6 (Agua limpia y saneamiento)</strong>: La investigación centraliza la mejora en el acceso a agua potable y servicios de saneamiento gestionados de manera segura.
+
+* <strong>ODS 11 (Ciudades y comunidades sostenibles)</strong>: Promueve infraestructuras sostenibles y equitativas para garantizar un acceso inclusivo al agua.
+
+* <strong>ODS 12 (Producción y consumo sostenibles)</strong>: Resalta la importancia de conservar y usar de manera eficiente los recursos hídricos.
+
+<hr>
+
+
+### Fuentes de los datos escogidos y su fiabilidad
+
+<br>Los datos utilizados en el proyecto provienen de las siguientes fuentes:
+
+<strong>- WHO/UNICEF Joint Monitoring Programme for Water Supply, Sanitation and Hygiene (JMP):</strong>
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;La Organización Mundial de la Salud (OMS), conocida en inglés como [World Health Organization (WHO)](https://www.who.int/es), es una agencia especializada de las Naciones Unidas encargada de la salud pública internacional. Fue establecida el 7 de abril de 1948 y lidera los esfuerzos globales para mejorar la salud, coordinar respuestas a emergencias de salud pública y establecer estándares internacionales en el ámbito de la salud.<br><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Por otra parte, [UNICEF](https://www.unicef.es/), siglas en inglés del Fondo de las Naciones Unidas para la Infancia (United Nations International Children's Emergency Fund), es una organización de las Naciones Unidas fundada en 1946. Promueve los derechos de la infancia y trata de mejorar las condiciones de vida de los niños en todo el mundo. Está presente en más de 190 países y es un actor clave en la implementación de los Objetivos de Desarrollo Sostenible (ODS). Colabora con gobiernos, organizaciones no gubernamentales y otras entidades para asegurar el bienestar de la infancia y el desarrollo de sus comunidades.<br><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Por último, El Programa Conjunto de Monitoreo de la OMS y UNICEF para el Abastecimiento de Agua, Saneamiento e Higiene ([Joint Monitoring Programme for Water Supply, Sanitation and Hygiene](https://washdata.org/)), lanzado en 1990, es una iniciativa clave para monitorear los avances globales en el acceso a servicios de agua, saneamiento e higiene (WASH, por sus siglas en inglés).<br><br>
+
+
+<strong>- IHME, Global Burden of Disease:</strong>
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;El [IHME](https://www.healthdata.org/) (Institute for Health Metrics and Evaluation) es un instituto de investigación independiente que forma parte de la Universidad de Washington en Seattle, Estados Unidos. Fundado en 2007 con el apoyo de la Fundación Bill y Melinda Gates, su objetivo principal es medir y analizar la salud global para proporcionar datos e informes que ayuden a los responsables de la toma de decisiones a mejorar las políticas de salud. Entre sus estudios más destacados se encuentra el [Global Burden of Disease](https://www.healthdata.org/research-analysis/gbd) (GBD), que mide el impacto de enfermedades y lesiones en la calidad de vida de las personas.<br><br>
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Los datos proporcionados por la Organización Mundial de la Salud (OMS) y UNICEF son generalmente considerados altamente fiables y confiables, ya que siguen una metodología rigurosa; al ser agencias de las Naciones Unidas, están sujetas a auditorías independientes y revisiones periódicas que aseguran la calidad y precisión de los datos que presentan; y hacen que sus datos y métodos estén disponibles al público a través de plataformas como washdata.org (para JMP) y los portales de la OMS, fomentando la transparencia y permitiendo que terceros verifiquen sus hallazgos.
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;En cuanto al IHME, la fiabilidad de sus datos es reconocida a nivel mundial, aunque ha sido objeto de críticas en ciertos aspectos debido a desafíos metodológicos y a la interpretación de sus proyecciones (p.e COVID-19). 
+
+
+
+<hr>
+
+### Análisis exploratorio inicial
+
+<br>
+
+#### <strong>Organización de los datos</strong>
+
+#### OMS/UNICEF
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Siendo un total de 5 ficheros, estos datos venían con una frecuencia anual; incluyendo país/territorio, código ISO_A3, año y valor del registro. Cada fichero contenía los registros de un atributo diferente: población total que no utiliza fuentes de agua mejoradas, población total que no utiliza instalaciones de saneamiento mejoradas, porcentaje de la población que practica la defecación al aire libre, porcentaje de la población rural que utiliza al menos servicios básicos de agua potable y porcentaje de la población urbana que utiliza al menos servicios básicos de agua potable. Todos con registro anual en el periodo 2000-2020. Algunos países carecían de datos determinados años. Los archivos fueron extraídos de OWID (Our World In Data), pero los que proporcionan los datos son la OMS y Unicef.<br><br>
+
+<center>
+![Ejemplo de fichero OMS/UNICEF](bc2f79ad-24ba-4e7c-b022-7fd430879412.jpeg){width=50% height=50%}
+</center>
+<br>
+
+#### IHME
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;De aquí se obtuvieron 3 ficheros, cada uno correspondiente a un atributo: muertes atribuidas a fuentes de agua inseguras, muertes atribuidas a un saneamiento inseguro y muertes atribuidas a la falta de acceso a instalaciones para lavarse las manos. Se incluyen todos los campos existentes en los otros 5 ficheros. Vienen de forma anual durante el periodo 2000-2020. Para su obtención se utilizó un generador de bases de datos proporcionado por el propio IHME, aplicando filtros para los factores de riesgo pertinentes.<br><br>
+
+<center>
+![](519cfd85-c5bf-482c-9544-fc47f47c10e1.jpeg){width=50% height=50%}
+<br>
+
+![](64ae5551-b3ee-43dd-8fcd-d7728ae2a2f3.jpeg){width=50% height=50%}
+<br>
+
+![Ejemplo de fichero IHME](8885d8a7-19bf-4ac2-a3b5-7ec9183aaedd.jpeg){width=80% height=80%}
+</center>
+
+<br>
+
+#### Anexos
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Aparte, se utilizaron varios documentos extra para agregar clasificadores de interés, en total dos: uno contenía la clasificación de los países por continente y nivel de ingresos; y el otro incluía la población total de cada país. Todos ellos con sus datos anuales.<br><br>
+
+#### <strong>Identificación de los requisitos de procesamiento e incidencias encontradas</strong>
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Antes de describir los procedimientos de procesado empleados, hay que hacer mención al software empleado (tanto para esta tarea, como para la elaboración de la vasta mayoría del trabajo): R, y el software Rstudio. 
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;R es un lenguaje de programación y un entorno de software para el análisis estadístico y la visualización de datos. Es ampliamente utilizado en estadística, minería de datos y análisis de datos científicos. R es conocido por su extensa colección de paquetes (bibliotecas) que permiten realizar una amplia gama de tareas, desde análisis estadísticos hasta gráficos complejos.
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;RStudio es un entorno de desarrollo integrado (IDE) para R, diseñado para facilitar su uso. Proporciona una interfaz gráfica que simplifica la escritura de código, la ejecución de scripts, la visualización de resultados y la gestión de proyectos en R. RStudio es muy popular entre los usuarios de R debido a su facilidad de uso y sus características que mejoran la productividad en el análisis de datos.
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Una vez aclarado esto, se procede a listar las operaciones de procesado empleadas hasta llegar a un recurso fácil de manejar. También se mencionan algunas incidencias que se encontraron en el desarrollo:
+
+<strong>
+
+* Un filtrado eliminando todas las entidades que no disponían de código ISO, ya que correspondían a regiones muy amplias o continentes.
+
+* Unión de todos los ficheros de datos en uno solo.
+
+* Borrado de campos insignificantes para el estudio (identificadores de cierto país en una determinada tabla, o clasificadores de sexo y edad)
+
+* En algunos registros con porcentajes, salían valores muy altos (p.e 99595). Tras hacer varias comprobaciones, se concluyó que faltaba la coma decimal y se arregló para todos los casos.
+
+* Inclusión de continente, población y nivel de ingresos a cada país, en una misma tabla.
+
+* Para ciertos territorios no existían esos registros, incluso probando varios ficheros. Entonces, se modificó manualmente ese pequeño conjunto de datos hasta solucionar el problema.
+
+</strong>
+<br>
+
+#### <strong>Fichero final</strong>
+
+```{r}
+
+# CARGA DE MIS DATOS
+
+data = read.csv("nueva tabla v6.csv") %>%
+  as_tibble() %>%
+  select(-Development.status)
+
+
+```
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Finalmente, el documento final consta de registros para un total de 230 países, y en la mayoría de los casos 20 registros por país. Cada registro cuenta con los siguientes campos:
+
+<strong>
+
+* Nombre del país o territorio
+* Código ISO
+* Año (2000-2020)
+* Continente del país o territorio (África, Asia, Europa, América del Norte, Oceanía o América del Sur)
+* Nivel de ingresos (Alto, Bajo, Medio-bajo o Medio-alto)
+* Población total que no utiliza fuentes de agua mejoradas 
+* Población total que no utiliza instalaciones de saneamiento mejoradas
+* Porcentaje de la población que practica la defecación al aire libre
+* Porcentaje de la población rural que utiliza al menos servicios básicos de agua potable
+* Porcentaje de la población urbana que utiliza al menos servicios básicos de agua potable
+* Muertes atribuidas a fuentes de agua inseguras
+* Muertes atribuidas a un saneamiento inseguro
+* Muertes atribuidas a la falta de acceso a instalaciones para lavarse las manos
+
+</strong>
+
+
+
+<hr>
+
+### Análisis exploratorio
+
+<br>
+
+```{verbatim}
+
+data = read.csv("nueva tabla v6.csv") %>%
+  as_tibble() %>%
+  filter(Share.of.the.urban.population.using.at.least.basic.drinking.water.services>100) %>%
+  
+  sum(data$muertes.agua.no.segura)
+  
+data
+
+levels(as.factor(data$Entity))
+
+levels(as.factor(data$continent))
+
+levels(as.factor(data$WorldBank.income.group))
+
+levels(as.factor(data$Development.status))
+
+
+```
+
+```{r}
+
+# CARGA DE MIS DATOS
+
+data = read.csv("nueva tabla v6.csv") %>%
+  as_tibble()
+
+```
+
+#### <strong>Población que no utiliza fuentes de agua mejoradas</strong>
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;En primer lugar, se observará el **panorama general en los continentes** acerca de la cantidad de personas que no hacen uso de fuentes de agua potable mejoradas. Las fuentes de agua potable mejoradas son aquellas que tienen el potencial de suministrar agua potable por la naturaleza de su diseño y construcción, e incluyen: agua canalizada, pozos perforados o pozos entubados,
+pozos excavados protegidos, manantiales protegidos, agua de lluvia y agua envasada o suministrada.<br><br>
+
+```{r}
+
+p = data %>%
+  group_by(continent,Year) %>%
+  summarise(x=sum(The.totalpopulation.not.using.improved.water.sources)) %>%
+  group_by(continent) %>%
+  summarise(poblacion.total.en.millones=mean(na.omit(x))/10^6) %>%
+  mutate(poblacion.total.en.millones=round(poblacion.total.en.millones,2)) %>%
+  ggplot(aes(x=reorder(continent,poblacion.total.en.millones),y=poblacion.total.en.millones, fill=continent)) + geom_bar(stat = "identity") +
+   xlab("continent") +
+   theme(legend.position = "none") +
+  labs(title="Promedio anual de población total (en millones) que no utiliza fuentes\nde agua mejoradas (Periodo 2000-2020, por continentes)")
+
+
+ggplotly(p, tooltip = c("poblacion.total.en.millones"))
+
+
+```
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Los continentes con más población sin acceso a este recurso son África y Asia, ambos superando los 200 millones de personas (haciendo promedio de todo el periodo 2000-2020). Cabe destacar que Asia es un continente con una densidad de población considerablemente superior a la de África. En comparación con los otros continentes, este problema afecta a un volumen considerablemente superior de población.
+
+También podemos mirar el ratio entre los afectados y la población total en los continentes:<br><br>
+
+
+```{verbatim}
+
+p = data %>%
+  select(Entity:continent,The.totalpopulation.not.using.improved.water.sources,population) %>%
+  group_by(continent,Year) %>%
+  summarise(x=sum(na.omit(The.totalpopulation.not.using.improved.water.sources)),population=sum(na.omit(population))) %>%
+  group_by(continent) %>%
+  summarise(personas.por.millon=mean(x)/mean(population)) %>%
+  mutate(personas.por.millon=round(personas.por.millon,3)) %>%
+  ggplot(aes(x=reorder(continent,personas.por.millon),y=personas.por.millon, fill=continent)) +
+    geom_bar(stat = "identity") +
+   theme(legend.position = "none") +
+  labs(title="Promedio de personas.por.millon que no utiliza fuentes de agua \nmejoradas (Periodo 2000-2020, por continentes)")
+
+ggplotly(p, tooltip = c("continent","personas.por.millon"))
+  
+
+```
+
+
+
+```{r}
+
+p <- data %>%
+  group_by(Year,continent) %>%
+  summarise(ratio=sum(na.omit(The.totalpopulation.not.using.improved.water.sources))/sum(na.omit(population))*100) %>%
+  mutate(ratio=round(ratio,2), Year=as.factor(Year)) %>%
+  ggplot(aes(continent,Year,fill=ratio)) + 
+    geom_tile() + 
+    scale_fill_gradientn(colors = brewer.pal(9, 'YlOrRd'))+
+    theme(axis.text.x = element_text(angle = 0,hjust=1)) +
+  labs(title="Ratio (%) entre población que no usa fuentes de aguas mejoradas y\nla población total (Por año y continente)")
+ 
+ggplotly(p, tooltip=c("ratio"))
+  
+  
+
+
+
+```
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Se aprecia claramente aquí que el continente con más dificultades es África. Seguidamente van Asia y Oceanía; si bien Asia ha tenido máximos mayores, Oceanía ha mantenido una trayectoria más consistente a lo largo del tiempo, por lo que habría estado/está en peor estado. Luego se encuentran América del Norte y del Sur, donde la situación no es tan grave; y finalmente Europa, que es el continente con más accesibilidad al agua potable.<br><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Este mapa de calor se puede interpretar cronológicamente en cierto sentido, pudiendo deducir que se han mejorado las condiciones en todos los continentes excepto en Oceanía; e incluso habiéndose dado el caso en África, ha sido la zona con peores condiciones a lo largo de este periodo.
+<br><br>
+También se observará la situación siguiendo el **criterio de nivel de ingresos**, un factor que a priori debería tener cierta relación con los resultados de las gráficas.<br><br>
+
+```{r}
+p = data %>%
+  filter(!is.na(WorldBank.income.group)) %>%
+  group_by(WorldBank.income.group,Year) %>%
+  summarise(x=sum(The.totalpopulation.not.using.improved.water.sources)) %>%
+  group_by(WorldBank.income.group) %>%
+  summarise(poblacion.total.en.millones=mean(na.omit(x))/10^6) %>%
+  mutate(poblacion.total.en.millones=round(poblacion.total.en.millones,2)) %>%
+  ggplot(aes(x=reorder(WorldBank.income.group,poblacion.total.en.millones),y=poblacion.total.en.millones, fill=WorldBank.income.group)) + geom_bar(stat = "identity") +
+   xlab("nivel de ingresos") +
+   theme(legend.position = "none") +
+  labs(title="Promedio anual de población total (en millones) que no utiliza fuentes\nde agua mejoradas (Periodo 2000-2020, por nivel de ingresos)")
+
+
+ggplotly(p, tooltip = c("poblacion.total.en.millones"))
+```
+Las regiones con ingresos medios bajos y medios altos tienen las mayores deficiencias en acceso a fuentes de agua mejoradas.<br><br>
+
+```{r}
+
+p <- data %>%
+  filter(!is.na(WorldBank.income.group)) %>%
+  group_by(Year,WorldBank.income.group) %>%
+  summarise(ratio=sum(na.omit(The.totalpopulation.not.using.improved.water.sources))/sum(na.omit(population))*100) %>%
+  mutate(ratio=round(ratio,2), Year=as.factor(Year)) %>%
+  ggplot(aes(WorldBank.income.group,Year,fill=ratio)) + 
+    geom_tile() + 
+    scale_fill_gradientn(colors = brewer.pal(9, 'YlGn'))+
+    theme(axis.text.x = element_text(angle = 0,hjust=1)) +
+  labs(title="Ratio (%) entre población que no usa fuentes de aguas mejoradas y\nla población total (Por año y nivel de ingresos)")
+ 
+ggplotly(p, tooltip=c("ratio"))
+
+
+
+
+
+
+
+
+
+```
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Aquí se ve claramente que el acceso a fuentes de agua mejoradas está estrechamente relacionado con el nivel de ingresos, siendo mucho más limitado en países de bajos ingresos.
+
+A pesar de los avances en las últimas dos décadas, la disparidad entre grupos de ingresos sigue siendo evidente.
+
+<br>
+
+#### <strong>Comparación de la disponibilidad de, al menos, servicios básicos de agua potable (Sector rural vs. urbano) </strong>
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;A continuación, vamos a llevar a cabo una comparación entre la población urbana y la población rural, dividiendo los países según nivel de ingresos. Se mirará el porcentaje de la población (urbana vs. rural) que tiene acceso a, al menos, servicios básicos de agua potable. Los servicios básicos de agua potable se definen como una fuente mejorada de agua potable (explicado arriba), siempre que el tiempo de recogida no sea superior a 30 minutos para un viaje de ida y vuelta, incluidas las colas.<br><br>
+
+```{r}
+
+p = data %>%
+  filter(!is.na(WorldBank.income.group)) %>%
+  group_by(WorldBank.income.group,Year) %>%
+  summarise(x=mean(na.omit(Share.of.the.urban.population.using.at.least.basic.drinking.water.services)),
+            y=mean(na.omit(Share.of.the.rural.population.using.at.least.basic.drinking.water.services))) %>%
+  group_by(WorldBank.income.group) %>%
+  summarise(urban=mean(na.omit(x)), rural=mean(na.omit(y))) %>%
+  mutate(urban=round(urban,2), rural=round(rural,2)) %>%
+  pivot_longer(urban:rural, names_to = "type", values_to =   "value") %>%  
+  ggplot(aes(x=WorldBank.income.group,y=value,fill=type)) +
+    geom_bar(position = "dodge", stat = "identity") + labs(title="Porcentaje de población con, al menos, servicios básicos para beber\nagua (Población urbana vs. Población rural, por ingresos)", subtitle = "Por nivel de ingresos")
+
+ggplotly(p, tooltip=c("value"))
+
+
+
+
+
+
+
+```
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;En los países de altos ingresos se aprecia que, tanto en ciudades como en pueblos, hay una gran disponibilidad de medios de agua potable. En los casos donde los ingresos son medio-altos y medio-bajos, la situación es notablemente buena; obviando que en el último caso, se cae por debajo del 75% en los pueblos. En el último caso, observamos que el sector rural en países de bajos ingresos posee pocas facilidades para obtener agua potable. En general, el sector urbano tiene cierta ventaja sobre el rural respecto al tema.<br><br>
+
+```{r}
+
+p = data %>%
+  filter(!is.na(continent)) %>%
+  group_by(continent,Year) %>%
+  summarise(x=mean(na.omit(Share.of.the.urban.population.using.at.least.basic.drinking.water.services)),
+            y=mean(na.omit(Share.of.the.rural.population.using.at.least.basic.drinking.water.services))) %>%
+  group_by(continent) %>%
+  summarise(urban=mean(na.omit(x)), rural=mean(na.omit(y))) %>%
+  mutate(urban=round(urban,2), rural=round(rural,2)) %>%
+  pivot_longer(urban:rural, names_to = "type", values_to =   "value") %>%  
+  ggplot(aes(x=continent,y=value,fill=type)) +
+    geom_bar(position = "dodge", stat = "identity") + labs(title="Porcentaje de población con, al menos, servicios básicos para beber\nagua (Población urbana vs. Población rural, por continente)", subtitle = "Por continente")
+
+ggplotly(p, tooltip=c("value"))
+
+
+
+
+```
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Al mirar por continentes, se distingue claramente que África posee la peor situación; y Europa la mejor. Los otros continentes se encuentran en estados muy similares. Al igual que en la comparación por ingresos, se concluye que el problema tiene una mayor magnitud en los pueblos que en las ciudades.
+
+<br>
+
+#### <strong>Población que no utiliza instalaciones de saneamiento mejoradas</strong>
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Ahora se explorará un campo que si es cierto que puede resultar parecido al primer punto abordado, no es idéntico y merece ser observado aparte. Se trata del saneamiento óptimo del agua. Las instalaciones de saneamiento mejoradas son aquellas diseñadas para separar higiénicamente los excrementos del contacto humano, e incluyen: inodoros de cisterna/de descarga conectada a sistemas de alcantarillado por tuberías, fosas sépticas o letrinas de pozo; letrinas de pozo con losas (incluidas las letrinas de pozo ventiladas), e inodoros de compostaje.<br><br>
+
+
+
+
+
+
+
+
+
+```{r}
+
+data %>%  
+  group_by(continent,Year) %>%
+  summarise(x=sum(The.totalpopulation.not.using.improved.sanitation.facilities)) %>%
+  group_by(continent) %>%
+  summarise(poblacion.total.en.millones=mean(na.omit(x))/10^6) %>%
+  mutate(poblacion.total.en.millones=round(poblacion.total.en.millones,2)) %>% 
+  plotly::plot_ly(
+   labels = ~continent, 
+   values = ~poblacion.total.en.millones, 
+   textinfo='label+percent',
+   insidetextorientation='radial'
+  ) %>%
+  add_pie() %>% 
+  hide_legend() %>%
+  layout(
+  title = list(
+    text = "Promedio anual de población total (en millones) que no utiliza instalaciones\nde saneamiento mejoradas (Periodo 2000-2020, por continentes)",
+    x = 0.5,         # Centrar el título
+    xanchor = 'center',
+    y = 0.95,        # Ajustar la posición vertical del título (más arriba)
+    yanchor = 'top',
+    font = list(
+      size = 17,
+      color = "black"
+    )
+  ),
+  margin = list(t = 100) # Añadir margen superior para que el título no se corte
+)
+
+
+
+
+
+```
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Mirando al indicador pasado, en este gráfico se refleja que hay cierta diferencia entre la situación del agua potable y la del saneamiento. Si observamos los problemas de agua potable, Asia y África tienen valores relativamente similares, y más teniendo en cuenta a los otros continentes. Pero en este caso, se aprecia que existe una cantidad abrumadora de gente en el continente asiático que es incapaz de disfrutar de un saneamiento del agua en condiciones tolerables. De la misma manera ocurre en África, aunque no con tal magnitud (se encuentra menos de la mitad de personas que abarca Asia). Por último, en el resto de continentes, ocurre como en el caso anterior; se trata de una amenaza existente pero no demasiado alarmante.<br><br>
+
+```{r}
+
+p <- data %>%
+  group_by(Year,continent) %>%
+  summarise(ratio=sum(na.omit(The.totalpopulation.not.using.improved.sanitation.facilities))/sum(na.omit(population))*100) %>%
+  mutate(ratio=round(ratio,2), Year=as.factor(Year)) %>%
+  ggplot(aes(continent,Year,fill=ratio)) + 
+    geom_tile() + 
+    scale_fill_gradientn(colors = brewer.pal(9, 'YlOrRd'))+
+    theme(axis.text.x = element_text(angle = 0,hjust=1)) +
+  labs(title="Ratio (%) entre población que no dispone de instalaciones de\nsaneamiento mejoradas y la población total (Por año y continente)")
+ 
+ggplotly(p, tooltip=c("ratio"))
+
+
+
+
+
+
+
+
+```
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Ahora bien, comparando con la población de cada continente y sacando valores relativos, realmente África es el que más ha sufrido estos problemas de saneamiento a lo largo del tiempo.
+Siempre se juega con que Asia es el continente más habitado, lo que da una mejor impresión al tratar su situación de una manera local. Oceanía y América del Sur aparecen con un color anaranjado, denotando su grado de dificultades como moderado; y finalmente Europa y América del Norte, que se encuentran en muy buen estado.<br><br>
+
+```{r}
+
+
+data %>%  
+  filter(!is.na(WorldBank.income.group)) %>%
+  group_by(WorldBank.income.group,Year) %>%
+  summarise(x=sum(The.totalpopulation.not.using.improved.sanitation.facilities)) %>%
+  group_by(WorldBank.income.group) %>%
+  summarise(poblacion.total.en.millones=mean(na.omit(x))/10^6) %>%
+  mutate(poblacion.total.en.millones=round(poblacion.total.en.millones,2)) %>% 
+  plotly::plot_ly(
+   labels = ~WorldBank.income.group, 
+   values = ~poblacion.total.en.millones, 
+   textinfo='label+percent',
+   insidetextorientation='radial'
+  ) %>%
+  add_pie() %>% 
+  hide_legend() %>%
+  layout(
+  title = list(
+    text = "Promedio anual de población total (en millones) que no utiliza instalaciones\nde saneamiento mejoradas (Periodo 2000-2020, por nivel de ingresos)",
+    x = 0.5,         # Centrar el título
+    xanchor = 'center',
+    y = 0.95,        # Ajustar la posición vertical del título (más arriba)
+    yanchor = 'top',
+    font = list(
+      size = 17,
+      color = "black"
+    )
+  ),
+  margin = list(t = 100) # Añadir margen superior para que el título no se corte
+)
+
+
+
+
+
+
+
+```
+
+En este caso, hay una gran similitud entre esta variable y la población que no dispone de agua potable en condiciones.<br><br>
+
+```{r}
+p <- data %>%
+  filter(!is.na(WorldBank.income.group)) %>%
+  group_by(Year,WorldBank.income.group) %>%
+  summarise(ratio=sum(na.omit(The.totalpopulation.not.using.improved.sanitation.facilities))/sum(na.omit(population))*100) %>%
+  mutate(ratio=round(ratio,2), Year=as.factor(Year)) %>%
+  ggplot(aes(WorldBank.income.group,Year,fill=ratio)) + 
+    geom_tile() + 
+    scale_fill_gradientn(colors = brewer.pal(9, 'YlGn'))+
+    theme(axis.text.x = element_text(angle = 0,hjust=1)) +
+  labs(title="Ratio entre la población que no dispone de saneamiento mejorado y \nla población total (Por año y nivel de ingresos)")
+ 
+ggplotly(p, tooltip=c("ratio"))
+```
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;La situación ha mejorado en todos los países, excepto en los de bajos ingresos, donde parece ser que hay un estanco que impide el desarrollo de soluciones, posiblemente por falta de presupuesto.<br><br>
+
+
+
+#### <strong>Porcentaje de la población que practica la defecación al aire libre</strong>
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Un tópico de interés en relación al saneamiento es el estudio de la práctica de la defecación al aire libre. La defecación al aire libre se refiere a la práctica de defecar en campos, bosques, arbustos, masas de agua u otros espacios abiertos.
+Tiene una serie de repercusiones sanitarias y sociales negativas, como la propagación de enfermedades infecciosas, la diarrea (especialmente en niños), resultados sanitarios adversos en el embarazo, la malnutrición, así como una mayor vulnerabilidad a la violencia, especialmente para las mujeres y las niñas. Si no hay instalaciones de saneamiento en condiciones (o hay inexistencia de las mismas), se puede producir un aumento en la frecuencia de esta práctica.<br><br>
+
+
+
+```{r}
+
+p = data %>%
+  select(Entity:continent,Share.of.the.population.practicing.open.defecation) %>%
+  group_by(Entity,Year,continent) %>%
+  summarise(porcentaje=mean(na.omit(Share.of.the.population.practicing.open.defecation))) %>%
+  group_by(Entity,continent) %>%
+  summarise(porcentaje=mean(porcentaje)) %>%
+  mutate(porcentaje=round(porcentaje,2)) %>%
+  ggplot(aes(x=continent,y=porcentaje,fill=continent,label=Entity)) + 
+    geom_boxplot(outlier.shape = NA) +
+    geom_jitter(shape=16, position=position_jitter(0.2))+
+    theme(legend.position = "none") +
+  labs(title="Resumen sobre el porcentaje medio de la población que practica\ndefecación al aire libre (Promedio del periodo 2000-2020)")
+  
+  
+ggplotly(p,tooltip=c("Entity","porcentaje"))
+
+
+```
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Gracias a este gráfico podemos ver que la defecación al aire libre es más común en África en que en otros continentes, teniendo máximos en países como Niger, Eritrea o Chad. Después está Asia, Oceanía, América del Sur, América del Norte, y por último, Europa; es el lugar donde menos se da este fenómeno, con un porcentaje máximo del 0.39%.
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Podemos visualizar si hay una relación clara entre esta actividad y el saneamiento de una zona, utilizando como clasificador el nivel de ingresos:<br><br>
+
+
+
+```{r}
+
+p = data %>%
+  filter(!is.na(WorldBank.income.group)) %>%
+  select(Entity:WorldBank.income.group,Share.of.the.population.practicing.open.defecation,The.totalpopulation.not.using.improved.sanitation.facilities,population) %>%
+  group_by(Entity,Year,WorldBank.income.group) %>%
+  summarise(porcentaje.defecacion=mean(na.omit(Share.of.the.population.practicing.open.defecation)),porcentaje.no.saneamiento=mean(na.omit(The.totalpopulation.not.using.improved.sanitation.facilities))/mean(na.omit(population))*100) %>%
+  group_by(Entity,WorldBank.income.group) %>%
+  summarise(porcentaje.defecacion=mean(porcentaje.defecacion),porcentaje.no.saneamiento=mean(porcentaje.no.saneamiento)) %>%
+  mutate(porcentaje.defecacion=round(porcentaje.defecacion,2), porcentaje.no.saneamiento=round(porcentaje.no.saneamiento,2)) %>%
+  ggplot(aes(x=porcentaje.no.saneamiento,y=porcentaje.defecacion,color=WorldBank.income.group,label=Entity)) +
+  geom_point() +
+  scale_x_continuous(trans = 'log2') +
+  scale_y_continuous(trans = 'log2') +
+ labs(title="Relación entre el porcentaje de defecación al aire\nlibre y el porcentaje de población sin saneamiento óptimo")
+
+ggplotly(p, tooltip = c("porcentaje.no.saneamiento","porcentaje.defecacion","Entity"))
+
+
+
+```
+
+La nube de puntos más uniforme se encuentra en países de bajos ingresos, donde sí habría una relación notable.<br><br>
+
+
+#### <strong>Muertes atribuidas a fuentes de agua inseguras</strong>
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;La siguiente sección se enfocará en analizar el número de muertes por diversas causas, empezando por fuentes de agua inseguras. Con esto se refiere a: la contaminación microbiana del agua potable (a menudo es el resultado de la contaminación con heces). El agua insalubre es un factor de riesgo de diarrea, cólera, disentería, fiebre tifoidea y poliomielitis.<br><br>
+
+<strong>Mapa coroplético: Cantidad de muertes por agua potable insegura (Periodo 2000-2020, por países)</strong>
+
+```{r}
+
+geoj <- geojson_read("https://ctim.es/AEDV/data/geo_countries.geojson",  what = "sp")
+geoj_ti <- geoj %>% as_tibble()
+
+data1 = data %>%
+  select(Entity:continent,muertes.agua.no.segura) %>%
+  group_by(Entity,Code,Year,continent) %>%
+  summarise(muertes.totales=sum(na.omit(muertes.agua.no.segura))) %>%
+  group_by(Entity,Code,continent) %>%
+  summarise(muertes.totales=sum(muertes.totales)) %>%
+  arrange(desc(muertes.totales))
+
+join <- left_join(geoj_ti,data1,by = c("ISO_A3" = "Code")) %>%
+  select(-Entity)
+
+etiquetas <-paste("<strong> ",join$ADMIN ,"</strong><br>Muertes: ",round(join$muertes.totales)) %>% 
+  lapply(htmltools::HTML)
+
+bins <- c(0,1000,10000,50000,100000,250000,500000,1000000,2500000,5000000,7500000,9000000,11500000)
+    pal <- colorBin("YlOrRd", domain = data, bins = bins)
+    legend.title <- "Porcentaje (%)"
+
+geoj %>%
+  leaflet() %>%  
+  setView(lng = 5, lat = 22, zoom = 1) %>% 
+  addPolygons(
+    fillColor = ~pal(join$muertes.totales), 
+    weight = 2,
+    opacity = 1,
+    color = "white",
+    dashArray = "3",
+    fillOpacity = 0.7,
+    highlightOptions = highlightOptions( 
+      weight = 2,
+      color = rgb(0.2,0.2,0.2),
+      dashArray = "",
+      fillOpacity = 0.7,
+      bringToFront = TRUE
+    ),
+    label = etiquetas 
+  ) %>% 
+  addLegend("bottomleft", pal = pal, values = join$muertes.totales,
+    title = "Muertes",
+    labFormat = function(type, cuts, p) {
+          n = length(cuts) 
+          as.character(round((as.integer(cuts)[-n] + as.integer(cuts)[-1])/2))
+        },
+    opacity = 1
+  )
+
+
+
+
+
+
+
+
+```
+
+<br>
+
+<strong>Serie temporal: Cantidad de muertes por agua potable insegura (Periodo 2000-2020, por continentes)</strong>
+```{r}
+
+datav1 = read.csv("nueva tabla v6.csv") %>%
+  as_tibble() %>%
+  group_by(continent, Year) %>%
+  summarise(muertes.agua.no.segura = sum(na.omit(muertes.agua.no.segura))) %>%
+  mutate(muertes.agua.no.segura=round(muertes.agua.no.segura)) %>%
+  filter(!is.na(Year)) %>%
+  as_tsibble(index=Year, key=continent)
+  
+datav1 %>%
+  hchart("line",hcaes(x = Year, y = muertes.agua.no.segura, group = continent))
+
+
+
+```
+<br>
+
+```{r}
+
+p = data %>%
+  select(Entity:continent,muertes.agua.no.segura) %>%
+  group_by(Entity,Year,continent) %>%
+  summarise(muertes=mean(na.omit(muertes.agua.no.segura))) %>%
+  group_by(Entity,continent) %>%
+  summarise(muertes=mean(muertes)) %>%
+  mutate(muertes=round(muertes)) %>%
+  ggplot(aes(x=continent,y=muertes,fill=continent,label=Entity)) + 
+    geom_boxplot(outlier.shape = NA) +
+    geom_jitter(shape=16, position=position_jitter(0.2))+
+    theme(legend.position = "none") +
+  labs(title="Resumen sobre muertes por fuentes de agua no seguras \n(Periodo 2000-2020)")
+  
+  
+ggplotly(p,tooltip=c("Entity","muertes"))
+
+
+
+
+
+
+
+
+
+
+```
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Se concluye que el mayor número de muertes está aglutinado en India, convirtiendo a Asia en la región con más tasa de muertes por este factor de riesgo. La serie temporal refleja que la tendencia ha sido decreciente, notablemente en Asia y África; y el diagrama de cajas nos permite observar el número promedio de muertes al año de cada país por continente. De esta forma se pueden identificar rápidamente los países en mejor o peor estado.
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Por ejemplo, si nos fijamos en Asia, India toma el máximo valor. Se podría pensar que es por la población tan inmensa que contiene, pero abajo se encuentra China, que también se trata de un país muy poblado. Lo que refleja que realmente hay un problema en India, y no reside en sus números de población.<br><br>
+
+
+
+#### <strong>Muertes atribuidas a un saneamiento inseguro</strong>
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;A continuación se contemplará la evolución a lo largo del tiempo en el número de muertes por un saneamiento inseguro. El saneamiento inseguro incluye prácticas como la defecación al aire libre y el tratamiento inadecuado de las aguas residuales domésticas. Está relacionado con la propagación de enfermedades como el cólera, la disentería, la fiebre tifoidea, las lombrices intestinales y la poliomielitis. Asimismo, agrava los problemas de crecimiento y desarrollo de los niños y contribuye al problema de la resistencia a los antimicrobianos.<br><br>
+
+```{r}
+
+
+p = data %>%
+  select(Entity:continent,muertes.saneamiento.no.seguro) %>%
+  group_by(Entity,Year,continent) %>%
+  summarise(muertes=mean(na.omit(muertes.saneamiento.no.seguro))) %>%
+  group_by(Entity,continent) %>%
+  summarise(muertes=mean(muertes)) %>%
+  mutate(muertes=round(muertes)) %>%
+  ggplot(aes(x=continent,y=muertes,fill=continent,label=Entity)) + 
+    geom_boxplot(outlier.shape = NA) +
+    geom_jitter(shape=16, position=position_jitter(0.2))+
+    theme(legend.position = "none") +
+  labs(title="Resumen sobre muertes por saneamiento no seguro \n(Periodo 2000-2020)")
+  
+  
+ggplotly(p,tooltip=c("Entity","muertes"))
+
+
+
+
+```
+
+
+<strong>Serie temporal: Cantidad de muertes por saneamiento inadecuado (Periodo 2000-2020, por continentes)</strong>
+```{r}
+
+datav1 = read.csv("nueva tabla v6.csv") %>%
+  as_tibble() %>%
+  group_by(continent, Year) %>%
+  summarise(muertes.saneamiento.no.seguro = sum(na.omit(muertes.saneamiento.no.seguro))) %>%
+  mutate(muertes.saneamiento.no.seguro=round(muertes.saneamiento.no.seguro)) %>%
+  filter(!is.na(Year)) %>%
+  as_tsibble(index=Year, key=continent)
+  
+datav1 %>%
+  hchart("line",hcaes(x = Year, y = muertes.saneamiento.no.seguro, group = continent))
+
+##highchart() %>%
+#  hc_add_series(
+#    data = datav1,
+#    hcaes(x = Year, y = muertes.saneamiento.no.seguro, group = continent))
+
+fit <- datav1 %>% 
+  filter(continent=="Africa") %>% 
+  model(ARIMA(muertes.saneamiento.no.seguro,stepwise = FALSE, approx = FALSE))
+
+prediccion <- fit |>
+  forecast(h = "20 years")
+
+prediccion |>
+  autoplot( datav1%>%
+             filter(Year>= year(as.Date("2000-01-01"))) 
+          ) + labs(title = "Predicción con modelo ARIMA", subtitle= "Muertes por instalaciones de saneamiento no óptimas, África")
+
+```
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Asia y África tienen registros con valores muy elevados respecto al resto de los continentes, algo que viene siendo común según todo lo visto anteriormente. Se aprecia una bajada constante ya sea en mayor o menor magnitud en todos los territorios. En base a eso, se puede deducir que ha habido una mejora continua en la accesibilidad de servicios de saneamiento de calidad.
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;También encontramos un modelo ARIMA predictivo para intentar predecir la tendencia en África, uno de los continentes en peor estado en la mayoría de casos. Hay que tener en cuenta que estos datos no presentan ningún tipo de estacionalidad; por lo que las predicciones presentan un grado de exactitud prácticamente nulo.
+
+<br>
+
+#### <strong>Muertes atribuidas a la falta de acceso a instalaciones en condiciones para lavarse las manos</strong>
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Por último, se verá el análisis de las muertes debidas a no tener instalaciones óptimas para lavarse las manos. El lavado de manos interrumpe la transmisión de muchas enfermedades, especialmente las diarreicas y las infecciones respiratorias, cutáneas y oculares. La falta de acceso a instalaciones para lavarse las manos aumenta las probabilidades de propagación de estas enfermedades.<br><br>
+
+<strong>Serie temporal: Cantidad de muertes por no tener acceso a lavarse las manos (Periodo 2000-2020, por continentes)</strong>
+```{r}
+
+
+datav1 = read.csv("nueva tabla v6.csv") %>%
+  as_tibble() %>%
+  group_by(continent, Year) %>%
+  summarise(muertes.sin.acceso.a.lavarse.las.manos = sum(na.omit(muertes.sin.acceso.a.lavarse.las.manos))) %>%
+  mutate(muertes.sin.acceso.a.lavarse.las.manos=round(muertes.sin.acceso.a.lavarse.las.manos)) %>%
+  filter(!is.na(Year)) %>%
+  as_tsibble(index=Year, key=continent)
+  
+datav1 %>%
+  hchart("line",hcaes(x = Year, y = muertes.sin.acceso.a.lavarse.las.manos, group = continent))
+
+
+
+
+
+
+
+
+
+```
+
+
+
+
+
+```{r}
+
+p = data %>%
+  select(Entity:continent,muertes.sin.acceso.a.lavarse.las.manos) %>%
+  group_by(Entity,Year,continent) %>%
+  summarise(muertes=mean(na.omit(muertes.sin.acceso.a.lavarse.las.manos))) %>%
+  group_by(Entity,continent) %>%
+  summarise(muertes=mean(muertes)) %>%
+  mutate(muertes=round(muertes)) %>%
+  ggplot(aes(x=continent,y=muertes,fill=continent,label=Entity)) + 
+    geom_boxplot(outlier.shape = NA) +
+    geom_jitter(shape=16, position=position_jitter(0.2))+
+    theme(legend.position = "none") +
+  labs(title="Resumen sobre muertes por enfermedades causadas por no poder\nlavarse las manos (Periodo 2000-2020)")
+  
+  
+ggplotly(p,tooltip=c("Entity","muertes"))
+
+
+
+
+
+
+
+
+```
+<strong>Serie temporal: Cantidad de muertes por no tener acceso a lavarse las manos (Periodo 2000-2020, por nivel de ingresos)</strong>
+```{r}
+
+datav1 = read.csv("nueva tabla v6.csv") %>%
+  as_tibble() %>%
+  filter(!is.na(WorldBank.income.group)) %>%
+  group_by(WorldBank.income.group, Year) %>%
+  summarise(muertes.sin.acceso.a.lavarse.las.manos = sum(na.omit(muertes.sin.acceso.a.lavarse.las.manos))) %>%
+  mutate(muertes.sin.acceso.a.lavarse.las.manos=round(muertes.sin.acceso.a.lavarse.las.manos)) %>%
+  filter(!is.na(Year)) %>%
+  as_tsibble(index=Year, key=WorldBank.income.group)
+  
+datav1 %>%
+  hchart("line",hcaes(x = Year, y = muertes.sin.acceso.a.lavarse.las.manos, group = WorldBank.income.group))
+
+
+```
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Comparando con los otros tipos de muertes, los números son relativamente menores, aunque no despreciables; y en esta ocasión, África se encuentra por encima de Asia, siendo Nigeria el país del continente con el promedio de muertes más alto. Al hacer la comparación con ingresos, los territorios con ingresos medios-bajos y bajos tienen los valores más altos, algo que era de esperar.<br><br>
+
+
+#### <strong>Análisis de atributos</strong>
+
+```{r}
+datos = read_csv('nueva tabla v6.csv') %>% 
+  as_tibble() %>%
+  arrange(Year)%>%
+  dplyr::select(
+    Entity,
+    continent,
+    Code,
+    Year,
+    poblacion.total.que.no.usa.fuentes.de.agua.mejoradas=The.totalpopulation.not.using.improved.water.sources,
+    poblacion.total.no.saneamiento.mejorado=The.totalpopulation.not.using.improved.sanitation.facilities,
+    porcentaje.poblacion.defecacion.aire.libre=Share.of.the.population.practicing.open.defecation,
+    porcentaje.rural.servicios.basicos.de.agua.potable=Share.of.the.rural.population.using.at.least.basic.drinking.water.services,
+    porcentaje.urbano.servicios.basicos.de.agua.potable=Share.of.the.urban.population.using.at.least.basic.drinking.water.services,
+    muertes.por.agua.potable.insegura=muertes.agua.no.segura,
+    muertes.por.saneamiento.inseguro=muertes.saneamiento.no.seguro,
+    muertes.sin.acceso.a.lavarse.las.manos)
+
+
+datos %>%
+  dplyr::select(poblacion.total.que.no.usa.fuentes.de.agua.mejoradas:muertes.sin.acceso.a.lavarse.las.manos) %>%
+  cor(use='complete.obs') %>% 
+  hchart()
+
+
+```
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Para acabar, puede ser interesante observar la correlación que presentan los atributos/variables entre ellos. Tal y como se muestra en la matriz ilustrada arriba, la población que no dispone de agua potable en condiciones no suele tener acceso a instalaciones de saneamiento óptimo, ya que su correspondencia en la tabla se acerca mucho a 1. También se encuentra algo de relación entre estas faltas de recursos y los tipos de muertes, sobre todo en la falta de saneamiento apropiado. En adición, todos los tipos de muertes presentan un elevado grado de similitud. Por último, cabe mencionar que el porcentaje de defecación al aire libre hace que los porcentajes de acceso al agua varíen (tanto en zonas rurales como en urbanas), de forma que cuanto más aumente este porcentaje, más disminuyen los otros.
+
+
+<hr>
+
+### Cuadro de mandos
+
+<br>
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Al principio de este documento se ubica un enlace al cuadro de mandos del proyecto, donde se puede consultar básicamente todo el grueso de los datos empleados. Se compone de:<br><br>
+
+* Un <strong>mapa coroplético interactivo</strong>, el cual permite mostrar los valores de cada atributo, en cualquier país del mundo y en cualquier año del periodo estudiado (2000-2020), resultando en una forma muy gráfica de visualizar información. 
+
+* Una pestaña de <strong>series temporales</strong>, para visualizar el progreso de los valores asociados a los atributos a lo largo de la franja temporal establecida. En todos se muestra la suma de los valores de los países por continente, excepto en los porcentajes, donde se hace la media.
+
+* Una sección de <strong>diagramas de cajas</strong>, cuyo propósito se basa en ver la información comprimida en un vistazo rápido, y poder identificar valores máximos o mínimos con facilidad. Se utiliza el promedio del periodo 2000-2020.
+
+* <strong>Análisis de atributos</strong>: matriz de correlación, porcentaje de varianza explicada por las componentes principales y gráfico de dispersión con las dos primeras componentes.
+
+* Un <strong>diagrama de dispersión</strong> que permite hacer comparaciones entre variables. 
+
+
+<hr>
+
+### Conclusiones y trabajos futuros
+
+<br>
+
+#### **Resultados y conclusiones obtenidas**
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Para abordar el primer objetivo propuesto, el cual se basa en hacer un análisis profundo del acceso al agua y saneamiento, y en identificar zonas más afectadas; se han llegado a las siguientes conclusiones:
+
+* En términos de acceso a agua potable, África y Asia han estado en una peor condición respecto al resto de países. Al calcular valores relativos, se descubre que África, en el año 2020, tiene un panorama peor al de cualquier continente en el año 2000. Esto es un problema considerando que los entornos han ido evolucionando positivamente con el tiempo. A pesar de ser el tercer continente con más población en esta condición, América del Sur no está tan perjudicado si miramos a su población total. No obstante, pasa el caso contrario con Oceanía.
+Por último, el problema es casi inexistente en América del Norte y Europa. Por otro lado, tomando los niveles de ingresos como criterio, se aprecia que la situación empeora a medida que los ingresos son más bajos.
+
+* Al profundizar en el estudio centrándonos en las diferencias entre el sector rural y el urbano, se concluye en que el constraste entre ellos es mayor cuanto los ingresos son menores.
+También influye el continente, habiendo 3 niveles diferenciados: Europa, donde casi no hay distinción; África, que presenta un nivel de disparidad significante; y el resto de continentes, que se encuentran en una posición similar, además de aceptable.
+
+* A nivel de saneamiento, y a pesar de que haya más gente con dificultades en Asia, África vuelve a ser la región con peor situación, siendo básicamente el 50% de la población del continente la que padece una desgracia como puede ser un saneamiento inadecuado. Seguidamente, se encuentra Asia, que ha mejorado considerablemente a lo largo del periodo; y el resto de regiones mantiene el mismo patrón del apartado anterior. Mirando la cantidad de ingresos, se puede deducir que todos los agrupamientos por nivel de ingresos han mejorado con el tiempo, excepto el de ingresos bajos, que parece no evolucionar prácticamente nada en el transcurso.
+
+* Respecto a la defecación al aire libre, parece ser que hay cierta relación con los anteriores problemas, puesto que los porcentajes más elevados se encuentran en el continente africano, con máximos en países como Niger o Eritrea; y los mínimos en Europa, que se trata de la región con menos estragos.
+
+* Por último, las muertes causadas por los factores de riesgo estudiados han ido bajando progresivamente; un hecho que, junto a la mejora en el acceso de los bienes hídricos, demuestra que no todo es negativo en este estudio.<br><br>
+
+#### **Grado de consecución de los objetivos**
+
+Al inicio se presentaban dos objetivos clave:
+
+-  **Realizar un análisis exhaustivo del acceso al agua potable y el saneamiento.**
+- **Generar conciencia sobre la escasez de agua en diversas partes del mundo y sensibilizar a las poblaciones con acceso suficiente sobre la importancia de conservar este recurso.**
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Luego de haber trabajado con los datos proporcionados, se han convertido en información útil y de interés, de esta manera logrando transmitir conocimiento sobre un tópico tan importante. Asimismo, se han cumplido esos 2 objetivos principales, ya que se deja claro las diferencias en el mundo sobre la situación, y se incita al lector a valorar lo que posee al mostrar situaciones de cierta delicadeza, para muchos inpensables.<br><br>
+
+#### **Posibles extensiones**
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;A pesar de haber abordado de manera satisfactoria las metas propuestas, el trabajo puede ser extendido de múltiples formas, para mostrar mediante otras variables una situación más verosímil.
+
+* **Calidad del agua**: Proporción de agua potable que cumple con estándares de calidad (microbiológica y química), presencia de contaminantes específicos (como arsénico, nitratos o metales pesados) en fuentes de agua, frecuencia de interrupciones en el suministro de agua potable...
+
+* **Sostenibilidad**: Porcentaje de fuentes de agua sostenibles (aquellas que no agotan los recursos hídricos), impacto del cambio climático en la disponibilidad de agua potable, uso de tecnologías de reciclaje o reutilización de agua en comunidades...
+
+* **Extensiones macroeconómicas y globales**: Relación entre el PIB per cápita y el acceso a agua y saneamiento mejorados, impactos de la urbanización en los servicios básicos de agua y saneamiento...
+
+* **Gobernanza y gestión**: Inversión gubernamental en infraestructura de agua y saneamiento por persona, porcentaje de cobertura de programas de educación en higiene, índice de desempeño en la gestión de recursos hídricos...
+
+<br><br>
