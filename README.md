@@ -1,6 +1,6 @@
 # 📊 Análisis de disponibilidad de agua y saneamiento a nivel mundial
 
-[![My Skills](https://skillicons.dev/icons?i=r,md)](https://skillicons.dev)
+[![My Skills](https://go-skill-icons.vercel.app/api/icons?i=r,plotly,markdown)](https://go-skill-icons.vercel.app)
 
 ## Descripción general
 Este proyecto aborda de manera integral la problemática del acceso al agua potable y los servicios de saneamiento a nivel global, con un enfoque especial en las desigualdades geográficas, económicas y sociales que persisten en distintas regiones del mundo. Utilizando datos oficiales de organismos internacionales como la OMS, UNICEF y el IHME, el análisis cubre el periodo 2000-2020 y se apoya en herramientas estadísticas y visualizaciones interactivas para facilitar la interpretación de los resultados.
