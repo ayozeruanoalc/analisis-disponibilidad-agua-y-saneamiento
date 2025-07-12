@@ -7,7 +7,7 @@
 - [📌 Descripción general](#-descripción-general)
 - [🎯 Objetivos del proyecto](#-objetivos-del-proyecto)
 - [📁 Archivos del proyecto](#-archivos-del-proyecto)
-- [🌐 Muestra visual del cuadro de mandos](-muestra-visual-del-cuadro-de-mandos)
+- [🌐 Muestra visual del cuadro de mandos](#-muestra-visual-del-cuadro-de-mandos)
 - [🖥️ Requisitos del sistema](#%EF%B8%8F-requisitos-del-sistema)
 - [🧪 Instrucciones de reproducción de análisis](#-instrucciones-de-reproducción-de-análisis)
 - [📚 Fuentes de datos](#-fuentes-de-datos)
@@ -93,7 +93,7 @@ El proyecto se alinea con los Objetivos de Desarrollo Sostenible (ODS), en espec
 
 ## 🌐 Muestra visual del cuadro de mandos
 
-
+![](https://github.com/user-attachments/assets/51c39abb-43d3-4435-ba2d-6f121ac2b4ff)
 
 ## 🖥️ Requisitos del sistema
 
@@ -111,7 +111,7 @@ _* Todos los archivos del repositorio deben estar en la misma carpeta._
 
 ## 📚 Fuentes de datos
 
-- [Our World in Data – Water and Sanitation](https://ourworldindata.org/water-access)
+- [Our World in Data – Water and Sanitation](https://ourworldindata.org/clean-water-sanitation)
   
   > Our World in Data recopila y publica información proveniente de fuentes oficiales como UNICEF, OMS y otras agencias internacionales.
 - [IHME - Global Burden of Disease](https://www.healthdata.org/gbd)
